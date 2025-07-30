@@ -42,7 +42,7 @@ const verifyToken = (req, res, next) => {
 
 async function run() {
   try {
-    // await client.connect();
+    await client.connect();
 
   
     const taskCollection = client.db("taskcollection").collection("alltasks");
