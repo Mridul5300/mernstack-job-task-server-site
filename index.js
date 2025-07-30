@@ -42,7 +42,7 @@ const verifyToken = (req, res, next) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
   
     const taskCollection = client.db("taskcollection").collection("alltasks");
@@ -148,7 +148,7 @@ app.patch("/tasks/:id/status", async (req, res) => {
 
 
     //  Ping test
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Connected to MongoDB successfully");
   } catch (err) {
     console.error("Mongo Error:", err);
