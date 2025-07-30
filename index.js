@@ -18,7 +18,7 @@ const cors = require('cors');
 const allowedOrigins = [
   'http://localhost:5173', 
   'http://localhost:5000', 
-  'https://subtle-semifreddo-9a6bed.netlify.app/'
+  'https://subtle-semifreddo-9a6bed.netlify.app'
 ];
 
 app.use(cors({
