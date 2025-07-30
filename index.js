@@ -63,7 +63,7 @@ async function run() {
       const hashedPassword = await bcrypt.hash(password, 10);
       const result = await authuserCollection.insertOne({ name, email, password: hashedPassword });
       res.send({ message: "Signup successful", result });
-      console.log("User signed up successfully:", result);
+      // console.log("User signed up successfully:", result);
       
     });
 
@@ -104,7 +104,7 @@ app.get('/tasks/:id', verifyToken, async (req, res) => {
       const task = req.body;
       const result = await taskCollection.insertOne(task);
       res.send(result);
-      console.log("Task added successfully:", result);
+      // console.log("Task added successfully:", result);
       
     });
 
