@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 dotenv.config();
 const app = express();
@@ -44,7 +44,7 @@ async function run() {
   try {
     await client.connect();
 
-    // const userCollection = client.db("jobtaskAuthentication").collection("users");
+  
     const taskCollection = client.db("taskcollection").collection("alltasks");
     const authuserCollection = client.db("authcollection").collection("authusers");
 
@@ -63,6 +63,8 @@ async function run() {
       const hashedPassword = await bcrypt.hash(password, 10);
       const result = await authuserCollection.insertOne({ name, email, password: hashedPassword });
       res.send({ message: "Signup successful", result });
+      console.log("User signed up successfully:", result);
+      
     });
 
     //  Login
@@ -75,7 +77,7 @@ async function run() {
       if (!isMatch) return res.status(401).send({ message: 'Invalid password' });
 
       // JWT Token
-      const token = jwt.sign({ email: user.email, id: user._id }, JWT_SECRET, { expiresIn: '2h' });
+      const token = jwt.sign({ email: user.email, id: user._id }, JWT_SECRET, { expiresIn: '2d' });
       res.send({ message: 'Login successful', token, user: { email: user.email, name: user.name } });
     });
 
@@ -86,13 +88,64 @@ app.get('/alltask', verifyToken, async (req, res) => {
   res.send(result);
 });
 
+app.get('/tasks/:id', verifyToken, async (req, res) => {
+  const id = req.params.id;
+  try {
+    const task = await taskCollection.findOne({ _id: new ObjectId(id) });
+    if (!task) return res.status(404).send({ message: "Task not found" });
+    res.send(task);
+  } catch (error) {
+    res.status.send({ message: "Internal server error" });
+  }
+});
 
     // Add new task (protected route)
-    app.post('/alltask', verifyToken, async (req, res) => {
+    app.post('/task', verifyToken, async (req, res) => {
       const task = req.body;
       const result = await taskCollection.insertOne(task);
       res.send(result);
+      console.log("Task added successfully:", result);
+      
     });
+
+    // Delete task by ID (protected route)
+app.delete('/alltask/:id', verifyToken, async (req, res) => {
+  try {
+    const id = req.params.id;
+    const result = await taskCollection.deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 1) {
+      res.send({ message: "Task deleted successfully", deletedCount: 1 });
+    } else {
+      res.status.send({ message: "Task not found", deletedCount: 0 });
+    }
+  } catch (error) {
+    console.error("Delete task error:", error);
+    res.status.send({ message: "Internal server error" });
+  }
+});
+// Update task status to "complete"
+app.patch("/tasks/:id/status", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await taskCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: "complete" } }
+    );
+
+    if (result.modifiedCount === 1) {
+      res.status(200).send({ message: "Task marked as complete." });
+    } else {
+      res.status(404).send({ message: "Task not found or already complete." });
+    }
+  } catch (error) {
+    console.error("Error updating task status:", error);
+    res.status(500).send({ message: "Internal server error." });
+  }
+});
+
+
 
     //  Ping test
     await client.db("admin").command({ ping: 1 });
